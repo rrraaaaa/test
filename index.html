@@ -3,41 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>解説付き・試験ツール</title>
+    <title>試験対策・大型入力版</title>
     <style>
         body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 600px; margin-bottom: 20px; box-sizing: border-box; }
+        /* 全体の幅を広げ、ゆとりを持たせました */
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 800px; margin-bottom: 20px; box-sizing: border-box; }
         .hidden { display: none; }
-        .q-container { border-bottom: 2px solid #eee; padding: 20px 0; }
-        .q-text { font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
-        .options-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
-        .opt-label { display: block; padding: 12px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .opt-label:hover { background: #f8f9fa; }
-        input[type="radio"] { margin-right: 10px; transform: scale(1.2); }
         
-        /* 採点後のスタイル */
+        /* 入力欄（textarea）をすべて大きく、見やすく設定 */
+        textarea, input[type="text"], select { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: 1px solid #ccc; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical; /* ユーザーが手動で高さを変えることも可能 */
+        }
+        textarea { min-height: 60px; }
+        .label-text { font-weight: bold; font-size: 0.9rem; color: #555; display: block; margin-top: 10px; }
+
+        .q-container { border-bottom: 2px solid #eee; padding: 20px 0; }
+        .q-text { font-weight: bold; margin-bottom: 10px; font-size: 1.2rem; line-height: 1.4; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .opt-label { display: block; padding: 15px; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 1.1rem; }
+        .opt-label:hover { background: #f8f9fa; }
+        input[type="radio"] { margin-right: 12px; transform: scale(1.3); }
+        
         .correct-ans { background: #d4edda !important; border-color: #28a745 !important; font-weight: bold; }
         .wrong-ans { background: #f8d7da !important; border-color: #dc3545 !important; }
-        .explanation-box { margin-top: 15px; padding: 15px; background: #e7f3ff; border-left: 5px solid #007bff; border-radius: 4px; font-size: 0.9rem; line-height: 1.5; color: #333; }
+        .explanation-box { margin-top: 15px; padding: 15px; background: #e7f3ff; border-left: 5px solid #007bff; border-radius: 4px; font-size: 1rem; line-height: 1.6; }
 
-        button { cursor: pointer; padding: 15px 25px; border: none; border-radius: 8px; background: #007bff; color: white; font-size: 1rem; width: 100%; margin: 10px 0; }
+        button { cursor: pointer; padding: 18px; border: none; border-radius: 10px; background: #007bff; color: white; font-size: 1.1rem; width: 100%; margin: 15px 0; font-weight: bold; }
         .sub-btn { background: #6c757d; }
-        .genre-tag { background: #e2e3e5; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
-        #score-banner { font-size: 1.5rem; font-weight: bold; color: #007bff; text-align: center; margin-bottom: 20px; display: none; }
+        .add-btn { background: #28a745; }
+        .genre-tag { background: #e2e3e5; padding: 3px 10px; border-radius: 4px; font-size: 0.85rem; vertical-align: middle; }
+        #score-banner { font-size: 1.8rem; font-weight: bold; color: #007bff; text-align: center; margin-bottom: 20px; display: none; }
     </style>
 </head>
 <body>
 
     <div id="setup-view" class="card">
-        <h2>試験を開始する</h2>
-        <p>ジャンルを選んで30問（以内）に挑戦！</p>
-        <select id="select-genre-play" style="width:100%; padding:10px; margin-bottom:10px;"></select>
-        <button onclick="startExam()">試験開始！</button>
+        <h2>試験対策アプリ</h2>
+        <span class="label-text">ジャンルを選択</span>
+        <select id="select-genre-play"></select>
+        <button onclick="startExam()">試験開始（最大30問）</button>
         <hr>
         <button class="sub-btn" onclick="switchView('edit-view')">問題を追加・管理する</button>
     </div>
 
-    <div id="exam-view" class="card hidden">
+    <div id="exam-view" class="card">
         <div id="score-banner"></div>
         <div id="questions-list"></div>
         <button id="submit-btn" onclick="gradeExam()">回答を終了して採点する</button>
@@ -45,24 +62,43 @@
     </div>
 
     <div id="edit-view" class="card hidden">
-        <h2>問題の管理</h2>
-        <input type="text" id="input-genre" placeholder="ジャンル名">
-        <input type="text" id="input-q" placeholder="問題文">
-        <input type="text" id="input-a" placeholder="正解" style="border-left:5px solid #28a745;">
-        <input type="text" id="input-w1" placeholder="ハズレ1">
-        <input type="text" id="input-w2" placeholder="ハズレ2">
-        <input type="text" id="input-w3" placeholder="ハズレ3">
-        <textarea id="input-note" placeholder="解説（採点後に表示されます）" style="width:100%; height:80px; padding:10px; border-radius:5px; border:1px solid #ddd; box-sizing:border-box; margin:5px 0;"></textarea>
-        <button onclick="addQuestion()" style="background:#28a745;">追加する</button>
-        <button class="sub-btn" onclick="switchView('setup-view')">戻る</button>
+        <h2>問題の管理・追加</h2>
+        
+        <span class="label-text">ジャンル（例：民法、第3章など）</span>
+        <input type="text" id="input-genre" placeholder="ジャンルを入力">
+
+        <span class="label-text">問題文</span>
+        <textarea id="input-q" placeholder="問題文を入力してください"></textarea>
+
+        <span class="label-text" style="color:#28a745;">正解（必須）</span>
+        <textarea id="input-a" placeholder="正解の選択肢を入力"></textarea>
+
+        <span class="label-text">ハズレ選択肢1</span>
+        <textarea id="input-w1" placeholder="間違いの選択肢1"></textarea>
+
+        <span class="label-text">ハズレ選択肢2</span>
+        <textarea id="input-w2" placeholder="間違いの選択肢2"></textarea>
+
+        <span class="label-text">ハズレ選択肢3</span>
+        <textarea id="input-w3" placeholder="間違いの選択肢3"></textarea>
+
+        <span class="label-text">解説</span>
+        <textarea id="input-note" style="min-height:100px;" placeholder="採点後に表示される解説文を入力"></textarea>
+
+        <button class="add-btn" onclick="addQuestion()">この問題を登録する</button>
+        <button class="sub-btn" onclick="switchView('setup-view')">トップへ戻る</button>
+        
         <hr>
-        <ul id="q-list" style="font-size:0.8rem; text-align:left;"></ul>
+        <h3>登録済みリスト（クリックで削除）</h3>
+        <ul id="q-list" style="font-size:0.9rem; text-align:left; padding-left:20px;"></ul>
     </div>
 
     <script>
-        // 保存場所はV5にアップデート（解説データを含むため）
         let questions = JSON.parse(localStorage.getItem('myQuizDataV5')) || [];
         let currentExamData = [];
+
+        // 初期状態で試験画面を隠す
+        document.getElementById('exam-view').classList.add('hidden');
 
         function switchView(viewId) {
             document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
@@ -74,7 +110,7 @@
         function updateGenreSelect() {
             const select = document.getElementById('select-genre-play');
             const genres = [...new Set(questions.map(q => q.g))];
-            select.innerHTML = '<option value="all">すべてのジャンル</option>';
+            select.innerHTML = '<option value="all">すべてのジャンルからランダムに出題</option>';
             genres.forEach(g => {
                 const opt = document.createElement('option');
                 opt.value = g; opt.textContent = g;
@@ -88,29 +124,30 @@
             const w1 = document.getElementById('input-w1').value, w2 = document.getElementById('input-w2').value, w3 = document.getElementById('input-w3').value;
             const note = document.getElementById('input-note').value || "解説はありません。";
             
-            if(!q || !a || !w1 || !w2 || !w3) return alert("選択肢をすべて入力してください");
+            if(!q || !a || !w1 || !w2 || !w3) return alert("空欄（解説以外）をすべて埋めてください");
 
             questions.push({g, q, a, w: [w1, w2, w3], note});
             localStorage.setItem('myQuizDataV5', JSON.stringify(questions));
             
             ["input-q", "input-a", "input-w1", "input-w2", "input-w3", "input-note"].forEach(id => document.getElementById(id).value = "");
             renderList();
-            alert("追加しました！");
+            alert("登録完了！");
         }
 
         function renderList() {
             const list = document.getElementById('q-list');
             list.innerHTML = '';
-            questions.forEach((item, index) => {
+            questions.slice().reverse().forEach((item, revIndex) => {
+                const actualIndex = questions.length - 1 - revIndex;
                 const li = document.createElement('li');
-                li.style.marginBottom = "8px";
-                li.innerHTML = `[${item.g}] <b>${item.q}</b> <span style="color:red; cursor:pointer;" onclick="deleteQ(${index})">[削除]</span>`;
+                li.style.marginBottom = "10px";
+                li.innerHTML = `[${item.g}] <b>${item.q.substring(0,20)}...</b> <span style="color:red; cursor:pointer;" onclick="deleteQ(${actualIndex})">[削除]</span>`;
                 list.appendChild(li);
             });
         }
 
         function deleteQ(index) {
-            if(confirm("削除しますか？")) {
+            if(confirm("この問題を削除しますか？")) {
                 questions.splice(index, 1);
                 localStorage.setItem('myQuizDataV5', JSON.stringify(questions));
                 renderList();
@@ -134,7 +171,6 @@
                 const options = [qData.a, ...qData.w].sort(() => Math.random() - 0.5);
                 const qDiv = document.createElement('div');
                 qDiv.className = 'q-container';
-                qDiv.id = `q-block-${i}`;
                 qDiv.innerHTML = `
                     <div class="q-text">${i+1}. <span class="genre-tag">${qData.g}</span> ${qData.q}</div>
                     <div class="options-grid" id="q${i}-opts">
@@ -145,7 +181,7 @@
                         `).join('')}
                     </div>
                     <div id="note-${i}" class="explanation-box hidden">
-                        <strong>💡 解説:</strong><br>${qData.note}
+                        <strong>💡 解説:</strong><br>${qData.note.replace(/\n/g, '<br>')}
                     </div>
                 `;
                 listArea.appendChild(qDiv);
@@ -167,15 +203,13 @@
                     if(selected && selected.value === val && val !== qData.a) label.classList.add('wrong-ans');
                 });
 
-                // 解説ボックスを表示
                 document.getElementById(`note-${i}`).classList.remove('hidden');
-
                 if(selected && selected.value === qData.a) score++;
             });
 
             const banner = document.getElementById('score-banner');
             banner.style.display = 'block';
-            banner.innerHTML = `試験結果: ${currentExamData.length}問中 ${score}問正解！`;
+            banner.innerHTML = `試験終了！<br>${currentExamData.length}問中 ${score}問正解`;
             document.getElementById('submit-btn').classList.add('hidden');
             document.getElementById('back-btn').classList.remove('hidden');
             window.scrollTo(0,0);
